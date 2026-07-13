@@ -194,6 +194,14 @@ async function loadHistory() {
           <span class="hi-method">${w.method === "mpesa" ? "M-Pesa" : "PayPal"} · ${w.destination}</span>
           <span class="hi-date">${w.created_at}</span>
         </div>
+
+        <!-- Aviator crash game (demo) -->
+        <div class="aviator-section">
+          <div class="card-head"><h2>🎮 Aviator</h2><span class="chip green">Demo</span></div>
+          <p class="muted">Try the Aviator crash game. This is a demo for fun — no real money.</p>
+          <a class="btn btn-primary" href="https://aviatorgame.org/demo" target="_blank" rel="noopener" style="margin-top:8px">🚀 Play Aviator Demo</a>
+          <p class="hint" style="margin-top:8px">Opens in a new tab.</p>
+        </div>
         <div style="text-align:right">
           <div class="hi-amount">KSh ${fmt(w.amount)}</div>
           <div class="hi-status">${w.status}</div>
