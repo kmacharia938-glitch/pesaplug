@@ -105,6 +105,7 @@ async function enterApp() {
   await loadVideos();
   await loadReferrals();
   await loadOffers();
+  initAds();
   applyRulesToUI();
   render();
   await loadHistory();
@@ -437,8 +438,17 @@ $("copyRefBtn").addEventListener("click", () => {
 
 async function loadOffers() {
   try {
-    const { offers } = await api("/api/offers", { authed: false });
+    const data = await api("/api/offers", { authed: false });
     const grid = $("offerGrid");
+    if (data.live) {
+      // REAL offerwall: load the provider wall in an iframe (credits via postback)
+      const { url } = await api("/api/offerwall/url");
+      grid.innerHTML = `<iframe src="${url}" title="Offerwall" class="offerwall-iframe"></iframe>
+        <p class="hint">Complete any offer in the wall above. Your balance is credited automatically when the provider confirms.</p>`;
+      return;
+    }
+    // DEMO mode: simulated offer cards
+    const offers = data.offers || [];
     grid.innerHTML = offers
       .map(
         (o) => `<div class="offer-tile" data-id="${o.id}">
@@ -456,10 +466,10 @@ async function loadOffers() {
         btn.disabled = true;
         btn.textContent = "…";
         try {
-          const data = await api("/api/offer/complete", { method: "POST", body: { offerId: Number(btn.dataset.id) } });
-          me = data.user;
+          const d = await api("/api/offer/complete", { method: "POST", body: { offerId: Number(btn.dataset.id) } });
+          me = d.user;
           render();
-          toast(`+${data.reward} KSh from offer! 🎯`);
+          toast(`+${d.reward} KSh from offer! 🎯`);
           btn.textContent = "Done ✓";
         } catch (err) {
           toast(err.message, "error");
@@ -469,6 +479,28 @@ async function loadOffers() {
       })
     );
   } catch {}
+}
+
+// Inject a REAL Google AdSense ad unit when a publisher id is configured.
+function initAds() {
+  const pid = RULES.ads && RULES.ads.publisherId;
+  if (!pid) return; // demo mode: simulated ad reward
+  if (window.__pesaplugAds) return;
+  window.__pesaplugAds = true;
+  const s = document.createElement("script");
+  s.async = true;
+  s.crossOrigin = "anonymous";
+  s.src = "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js";
+  s.setAttribute("data-ad-client", pid); // e.g. ca-pub-XXXX
+  document.head.appendChild(s);
+
+  // Banner slot on the Offers screen
+  const slot = document.getElementById("adBannerSlot");
+  if (slot && !slot.dataset.loaded) {
+    slot.dataset.loaded = "1";
+    slot.innerHTML = `<ins class="adsbygoogle" style="display:block" data-ad-client="${pid}" data-ad-slot="auto" data-ad-format="auto"></ins>`;
+    try { (window.adsbygoogle = window.adsbygoogle || []).push({}); } catch {}
+  }
 }
 
 $("watchAdBtn").addEventListener("click", async () => {

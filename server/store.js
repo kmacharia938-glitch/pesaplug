@@ -112,6 +112,14 @@ const users = {
     if (!code) return null;
     return data.users.find((u) => u.referral_code === String(code).toUpperCase()) || null;
   },
+  creditById(id, amount, earned) {
+    const u = this.findById(id);
+    if (!u) return null;
+    u.balance += amount;
+    if (earned) u.total_earned += amount;
+    this.update(u);
+    return u;
+  },
   create({ name, email, passwordHash, referralCode }) {
     const referrer = referralCode ? this.findByReferralCode(referralCode) : null;
     const user = {

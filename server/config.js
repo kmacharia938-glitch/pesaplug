@@ -26,8 +26,12 @@ const config = {
   offerwall: {
     enabled: process.env.OFFERWALL_ENABLED !== "false",
     // Real provider (CPX Research / BitLabs / Adscend). Leave blank = demo mode.
-    provider: process.env.OFFERWALL_PROVIDER || "",
+    provider: (process.env.OFFERWALL_PROVIDER || "cpx").toLowerCase(),
     publisherId: process.env.OFFERWALL_PUBLISHER_ID || "",
+    // KSh credited to the user per real completed offer (live mode)
+    reward: num(process.env.OFFERWALL_REWARD, 15),
+    // Shared secret used to verify the provider's postback (OFFERWALL_POSTBACK_SECRET)
+    postbackSecret: process.env.OFFERWALL_POSTBACK_SECRET || "change-me-postback-secret",
     // Owner's simulated earnings per completed offer (KSh), for admin stats
     ownerRevenuePerOffer: num(process.env.OFFERWALL_OWNER_REVENUE, 8)
   },
@@ -35,7 +39,7 @@ const config = {
     reward: num(process.env.AD_REWARD, 5), // user cut per rewarded ad
     // Owner's simulated earnings per ad impression (KSh)
     ownerRevenuePerView: num(process.env.AD_OWNER_REVENUE, 3),
-    // Real ad SDK publisher id (Google AdSense/AdMob). Blank = demo mode.
+    // Real ad SDK publisher id (Google AdSense). Blank = demo mode.
     publisherId: process.env.ADS_PUBLISHER_ID || ""
   },
 

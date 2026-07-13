@@ -32,8 +32,9 @@ router.get("/config", (req, res) => {
       signupBonus: config.referral.signupBonus,
       referrerBonus: config.referral.referrerBonus
     },
-    offerwall: { enabled: config.offerwall.enabled, provider: config.offerwall.provider || "demo" },
-    adReward: config.ads.reward
+    offerwall: { enabled: config.offerwall.enabled, provider: config.offerwall.provider || "demo", live: Boolean(config.offerwall.publisherId) },
+    adReward: config.ads.reward,
+    adsPublisherId: config.ads.publisherId ? "set" : ""
   });
 });
 
@@ -42,9 +43,14 @@ router.get("/videos", (req, res) => {
   res.json({ videos: store.videos.list() });
 });
 
-// Public: offerwall list
+// Public: offerwall list (live mode signals the client to load the real wall)
 router.get("/offers", (req, res) => {
-  res.json({ offers: store.offers.list().map((o) => ({ id: o.id, title: o.title, desc: o.desc, reward: o.reward, icon: o.icon })) });
+  const live = Boolean(config.offerwall.publisherId);
+  res.json({
+    live,
+    provider: live ? config.offerwall.provider : "demo",
+    offers: store.offers.list().map((o) => ({ id: o.id, title: o.title, desc: o.desc, reward: o.reward, icon: o.icon }))
+  });
 });
 
 // POST /api/video/complete  -> reward for finishing a 30s video
@@ -65,7 +71,7 @@ router.post("/video/complete", auth, (req, res) => {
       referrer.total_earned += config.referral.referrerBonus;
       store.users.update(referrer);
     }
-    user.referral_credited = true;
+    user.referral_credited = (user.referral_credited || 0) + 1;
     store.users.update(user);
   }
 
@@ -85,8 +91,11 @@ router.get("/referrals/me", auth, (req, res) => {
   });
 });
 
-// POST /api/offer/complete  -> demo offerwall completion awards KSh
+// POST /api/offer/complete  -> DEMO offerwall only (live completions come via postback)
 router.post("/offer/complete", auth, (req, res) => {
+  if (config.offerwall.publisherId) {
+    return res.status(400).json({ error: "Offers complete via the live offerwall; use the wall." });
+  }
   if (!config.offerwall.enabled) {
     return res.status(503).json({ error: "Offerwall is disabled." });
   }
@@ -103,11 +112,52 @@ router.post("/offer/complete", auth, (req, res) => {
   user.balance += offer.reward;
   user.total_earned += offer.reward;
   store.users.update(user);
-
-  // Owner's simulated earnings from this offer
   store.adLogs.record({ userId: user.id, ownerRevenue: config.offerwall.ownerRevenuePerOffer });
 
   res.json({ reward: offer.reward, user: publicUser(user) });
+});
+
+// GET /api/offerwall/url  -> signed live offerwall URL for the current user
+router.get("/offerwall/url", auth, (req, res) => {
+  if (!config.offerwall.publisherId) {
+    return res.status(400).json({ error: "Live offerwall not configured." });
+  }
+  const user = store.users.findById(req.user.id);
+  const sig = require("crypto")
+    .createHmac("sha256", config.offerwall.postbackSecret)
+    .update(String(user.id))
+    .digest("hex")
+    .slice(0, 16);
+  const postback = `${config.baseUrl}/api/offerwall/postback?user_id=${user.id}&sig=${sig}`;
+
+  let wall;
+  if (config.offerwall.provider === "bitlabs") {
+    wall = `https://wall.bitlabs.ai/?pub=${config.offerwall.publisherId}&user_id=${user.id}&postback=${encodeURIComponent(postback)}`;
+  } else {
+    // CPX Research (default)
+    wall = `https://wall.cpx-research.com/?hash=${config.offerwall.publisherId}&user_id=${user.id}&postback=${encodeURIComponent(postback)}`;
+  }
+  res.json({ url: wall, provider: config.offerwall.provider });
+});
+
+// POST /api/offerwall/postback  -> provider credits the user for a real completion
+router.post("/offerwall/postback", express.json(), (req, res) => {
+  const userId = Number(req.query.user_id || req.body.user_id);
+  const sig = req.query.sig || req.body.sig;
+  if (!userId || !sig) return res.status(400).send("bad request");
+
+  const expected = require("crypto")
+    .createHmac("sha256", config.offerwall.postbackSecret)
+    .update(String(userId))
+    .digest("hex")
+    .slice(0, 16);
+  if (sig !== expected) return res.status(403).send("invalid signature");
+
+  const amount = config.offerwall.reward;
+  store.users.creditById(userId, amount, true);
+  store.adLogs.record({ userId, ownerRevenue: config.offerwall.ownerRevenuePerOffer });
+
+  res.json({ ok: true, credited: amount });
 });
 
 // POST /api/ad/complete  -> rewarded ad: user gets a cut, owner logs revenue
