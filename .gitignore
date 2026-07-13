@@ -1,0 +1,8 @@
+node_modules/
+.env
+*.log
+data/
+pesaplug.db
+pesaplug.db-*
+pesaplug.db.json
+

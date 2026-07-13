@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pesaplug — Admin</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="admin.css" />
+</head>
+<body class="admin-body">
+
+  <!-- LOGIN -->
+  <div class="auth-wrap" id="adminLogin">
+    <div class="auth-card">
+      <div class="brand auth-brand">
+        <span class="logo">P</span>
+        <span class="brand-name">Pesa<span class="accent">plug</span></span>
+      </div>
+      <p class="auth-tag">Admin Console</p>
+      <form id="adminLoginForm">
+        <label>Admin username</label>
+        <input type="text" id="adminUser" placeholder="admin" autocomplete="username" />
+        <label>Password</label>
+        <input type="password" id="adminPass" placeholder="••••••••" autocomplete="current-password" />
+        <button type="submit" class="btn btn-primary btn-block">Log in</button>
+        <p class="hint" id="adminLoginHint"></p>
+      </form>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="adminApp" class="hidden">
+    <header class="appbar">
+      <div class="brand">
+        <span class="logo">P</span>
+        <span class="brand-name">Pesa<span class="accent">plug</span> <small class="admin-badge">Admin</small></span>
+      </div>
+      <div class="appbar-right">
+        <a class="link-btn" href="/" target="_blank">Open user app ↗</a>
+        <button class="logout-btn" id="adminLogout" title="Log out">⏻</button>
+      </div>
+    </header>
+
+    <div class="admin-container">
+      <!-- Stats -->
+      <div class="stat-grid" id="statGrid"></div>
+
+      <!-- Tabs -->
+      <div class="admin-tabs">
+        <button class="admin-tab active" data-tab="withdrawals">Withdrawals</button>
+        <button class="admin-tab" data-tab="users">Users</button>
+        <button class="admin-tab" data-tab="videos">Videos</button>
+      </div>
+
+      <!-- Withdrawals -->
+      <section class="admin-view active" id="tab-withdrawals">
+        <div class="table-wrap">
+          <table class="admin-table">
+            <thead>
+              <tr><th>ID</th><th>User</th><th>Method</th><th>Destination</th><th>Amount</th><th>Status</th><th>Date</th><th>Actions</th></tr>
+            </thead>
+            <tbody id="withdrawalsBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Users -->
+      <section class="admin-view" id="tab-users">
+        <div class="table-wrap">
+          <table class="admin-table">
+            <thead>
+              <tr><th>ID</th><th>Name</th><th>Email</th><th>Balance</th><th>Earned</th><th>Videos</th><th>Streak</th><th>Joined</th></tr>
+            </thead>
+            <tbody id="usersBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Videos -->
+      <section class="admin-view" id="tab-videos">
+        <form id="videoForm" class="video-add">
+          <input type="text" id="videoEmoji" class="emoji-input" placeholder="🎬" maxlength="4" />
+          <input type="text" id="videoTitle" placeholder="Video title" />
+          <input type="text" id="videoUrl" placeholder="YouTube link or video ID (e.g. https://youtu.be/kJQP7kiw5Fk)" />
+          <button type="submit" class="btn btn-primary">Add video</button>
+        </form>
+        <div class="video-grid" id="videoGrid"></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+  <script src="admin.js"></script>
+</body>
+</html>

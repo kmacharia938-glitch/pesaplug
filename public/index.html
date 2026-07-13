@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pesaplug — Watch Videos & Earn Money | M-Pesa & PayPal Withdrawals</title>
+  <meta name="description" content="Pesaplug is an earning app where you watch short videos to earn money, keep a daily streak bonus, and withdraw your cash instantly to M-Pesa or PayPal." />
+  <meta name="keywords" content="Pesaplug, earn money online, watch videos earn, M-Pesa withdrawal, PayPal, make money Kenya, paid to watch videos, daily streak rewards" />
+  <meta name="author" content="Pesaplug" />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://pesaplug.loca.lt/" />
+
+  <!-- Open Graph / social -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Pesaplug" />
+  <meta property="og:title" content="Pesaplug — Watch Videos & Earn Money" />
+  <meta property="og:description" content="Watch short videos, earn KSh, keep your daily streak, and withdraw to M-Pesa or PayPal." />
+  <meta property="og:url" content="https://pesaplug.loca.lt/" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Pesaplug — Watch Videos & Earn Money" />
+  <meta name="twitter:description" content="Watch short videos, earn KSh, and withdraw to M-Pesa or PayPal." />
+
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="manifest" href="site.webmanifest" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- AUTH SCREEN -->
+  <div class="auth-wrap" id="authWrap">
+    <div class="auth-card">
+      <div class="brand auth-brand">
+        <span class="logo">P</span>
+        <span class="brand-name">Pesa<span class="accent">plug</span></span>
+      </div>
+      <p class="auth-tag">Watch videos. Earn KSh. Withdraw to M-Pesa.</p>
+
+      <div class="auth-tabs">
+        <button class="auth-tab active" data-auth="login" id="tabLogin">Log in</button>
+        <button class="auth-tab" data-auth="register" id="tabRegister">Sign up</button>
+      </div>
+
+      <form id="authForm">
+        <div class="field-group hidden" id="nameField">
+          <label>Full name</label>
+          <input type="text" id="authName" placeholder="Your name" autocomplete="name" />
+        </div>
+        <label>Email</label>
+        <input type="email" id="authEmail" placeholder="you@example.com" autocomplete="email" />
+        <label>Password</label>
+        <input type="password" id="authPassword" placeholder="At least 6 characters" autocomplete="current-password" />
+        <button type="submit" class="btn btn-primary btn-block" id="authSubmit">Log in</button>
+        <p class="hint" id="authHint"></p>
+      </form>
+    </div>
+  </div>
+
+  <!-- APP SHELL (hidden until logged in) -->
+  <div id="appShell" class="hidden">
+  <!-- Top App Bar -->
+  <header class="appbar">
+    <div class="brand">
+      <span class="logo">P</span>
+      <span class="brand-name">Pesa<span class="accent">plug</span></span>
+    </div>
+    <div class="appbar-right">
+      <div class="balance-pill" id="balancePill">
+        <span class="balance-label">Balance</span>
+        <span class="balance-value">KSh <span id="balanceTop">0</span></span>
+      </div>
+      <button class="logout-btn" id="logoutBtn" title="Log out">⏻</button>
+    </div>
+  </header>
+
+  <!-- Info banner -->
+  <div class="demo-note" id="infoBanner">
+    Signed in as <strong id="userName">—</strong>. Earnings are saved to your account.
+  </div>
+
+  <main class="container">
+
+    <!-- HOME / DASHBOARD -->
+    <section class="view active" id="view-home">
+      <div class="hero-card">
+        <div class="hero-top">
+          <div>
+            <p class="muted">Available balance</p>
+            <h1 class="big-balance">KSh <span id="balanceHome">0</span></h1>
+          </div>
+          <button class="btn btn-light" data-nav="withdraw">Withdraw</button>
+        </div>
+        <div class="hero-stats">
+          <div class="stat">
+            <span class="stat-num" id="videosWatched">0</span>
+            <span class="stat-lbl">Videos watched</span>
+          </div>
+          <div class="stat">
+            <span class="stat-num" id="totalEarned">0</span>
+            <span class="stat-lbl">Total earned (KSh)</span>
+          </div>
+          <div class="stat">
+            <span class="stat-num" id="streakDays">0</span>
+            <span class="stat-lbl">Day streak</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Daily streak card -->
+      <div class="card streak-card">
+        <div class="card-head">
+          <h2>Daily Streak</h2>
+          <span class="chip">+10 KSh / day</span>
+        </div>
+        <p class="muted">Claim once every day to keep your streak alive and earn a bonus.</p>
+        <div class="streak-track" id="streakTrack"></div>
+        <button class="btn btn-primary btn-block" id="claimStreakBtn">Claim daily 10 KSh</button>
+        <p class="hint" id="streakHint"></p>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <h2>Earn by watching</h2>
+          <span class="chip green">+20 KSh / video</span>
+        </div>
+        <p class="muted">Watch a 30-second video fully to earn 20 KSh.</p>
+        <button class="btn btn-primary btn-block" data-nav="watch">Start watching</button>
+      </div>
+    </section>
+
+    <!-- WATCH VIDEOS -->
+    <section class="view" id="view-watch">
+      <h2 class="page-title">Watch &amp; Earn</h2>
+      <p class="muted">Each video is 30 seconds. Watch to the end to earn <strong>20 KSh</strong>.</p>
+
+      <div class="video-shell" id="videoShell">
+        <div class="video-screen" id="videoScreen">
+          <div id="ytPlayer"></div>
+          <div class="video-overlay" id="videoOverlay">
+            <div class="video-emoji" id="videoEmoji">🎬</div>
+            <div class="video-title" id="videoTitle">Ready to earn?</div>
+            <div class="video-reward">Reward: <span data-video-reward>20</span> KSh</div>
+          </div>
+        </div>
+        <div class="progress-wrap">
+          <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <div class="video-controls">
+          <span class="timer" id="videoTimer">0:30</span>
+          <button class="btn btn-primary" id="watchBtn">Play video</button>
+        </div>
+      </div>
+      <p class="hint" id="watchHint">Watch a video for 30 seconds to earn your reward. Keep it playing and stay on this screen.</p>
+    </section>
+
+    <!-- WITHDRAW -->
+    <section class="view" id="view-withdraw">
+      <h2 class="page-title">Withdraw earnings</h2>
+      <div class="withdraw-balance">
+        <span class="muted">Withdrawable balance</span>
+        <span class="wb-value">KSh <span id="balanceWithdraw">0</span></span>
+      </div>
+      <p class="min-note">Minimum withdrawal: <strong>KSh 240</strong></p>
+
+      <div class="method-toggle">
+        <button class="method-btn active" data-method="mpesa" id="mpesaTab">
+          <span class="m-icon mpesa">M-PESA</span>
+        </button>
+        <button class="method-btn" data-method="paypal" id="paypalTab">
+          <span class="m-icon paypal">PayPal</span>
+        </button>
+      </div>
+
+      <form id="withdrawForm" class="card">
+        <!-- M-Pesa fields -->
+        <div class="field-group" id="mpesaFields">
+          <label>M-Pesa phone number</label>
+          <input type="tel" id="mpesaPhone" placeholder="e.g. 0712 345 678" autocomplete="off" />
+        </div>
+
+        <!-- PayPal fields -->
+        <div class="field-group hidden" id="paypalFields">
+          <label>PayPal email</label>
+          <input type="email" id="paypalEmail" placeholder="you@example.com" autocomplete="off" />
+        </div>
+
+        <label>Amount (KSh)</label>
+        <input type="number" id="withdrawAmount" min="240" placeholder="240" />
+        <button type="button" class="link-btn" id="maxBtn">Withdraw max</button>
+
+        <button type="submit" class="btn btn-primary btn-block" id="withdrawSubmit">Request withdrawal</button>
+        <p class="hint" id="withdrawHint"></p>
+      </form>
+
+      <div class="card" id="historyCard">
+        <div class="card-head"><h2>Withdrawal history</h2></div>
+        <ul class="history-list" id="historyList">
+          <li class="empty">No withdrawals yet.</li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <!-- Bottom nav -->
+  <nav class="bottom-nav">
+    <button class="nav-item active" data-nav="home">
+      <span class="nav-ico">🏠</span><span>Home</span>
+    </button>
+    <button class="nav-item" data-nav="watch">
+      <span class="nav-ico">▶️</span><span>Watch</span>
+    </button>
+    <button class="nav-item" data-nav="withdraw">
+      <span class="nav-ico">💰</span><span>Withdraw</span>
+    </button>
+  </nav>
+  </div><!-- /appShell -->
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script src="https://www.youtube.com/iframe_api"></script>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,34 @@
+services:
+  - type: web
+    name: pesaplug
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node server/index.js
+    envVars:
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ADMIN_USER
+        sync: false
+      - key: ADMIN_PASS
+        sync: false
+      - key: REWARD_PER_VIDEO
+        value: "20"
+      - key: STREAK_REWARD
+        value: "10"
+      - key: VIDEO_LENGTH_SECONDS
+        value: "30"
+      - key: MIN_WITHDRAW
+        value: "240"
+      - key: MPESA_ENV
+        value: sandbox
+      - key: MPESA_CONSUMER_KEY
+        sync: false
+      - key: MPESA_CONSUMER_SECRET
+        sync: false
+      - key: MPESA_SHORTCODE
+        sync: false
+      - key: MPESA_INITIATOR_NAME
+        sync: false
+      - key: MPESA_SECURITY_CREDENTIAL
+        sync: false
