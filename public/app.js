@@ -59,6 +59,14 @@ function setAuthMode(mode) {
   $("authHint").textContent = "";
 }
 
+// If a referral link was clicked, preserve the ref code in a hidden field
+(function captureRef() {
+  const ref = new URLSearchParams(location.search).get("ref");
+  if (ref && $("authRef")) {
+    $("authRef").value = ref;
+  }
+})();
+
 document.querySelectorAll(".auth-tab").forEach((b) =>
   b.addEventListener("click", () => setAuthMode(b.dataset.auth))
 );
@@ -75,8 +83,13 @@ $("authForm").addEventListener("submit", async (e) => {
     const path = authMode === "login" ? "/api/auth/login" : "/api/auth/register";
     const body =
       authMode === "login"
-        ? { email, password }
-        : { name, email, password, ref: new URLSearchParams(location.search).get("ref") || "" };
+      ? { email, password }
+      : {
+          name,
+          email,
+          password,
+          ref: $("authRef") ? $("authRef").value : ""
+        };
     const data = await api(path, { method: "POST", body, authed: false });
     setToken(data.token);
     me = data.user;
