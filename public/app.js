@@ -442,9 +442,25 @@ async function loadOffers() {
     const grid = $("offerGrid");
     if (data.live) {
       // REAL offerwall: load the provider wall in an iframe (credits via postback)
-      const { url } = await api("/api/offerwall/url");
-      grid.innerHTML = `<iframe src="${url}" title="Offerwall" class="offerwall-iframe"></iframe>
-        <p class="hint">Complete any offer in the wall above. Your balance is credited automatically when the provider confirms.</p>`;
+      let url = "";
+      try {
+        const wall = await api("/api/offerwall/url");
+        url = wall.url;
+      } catch {}
+
+      grid.innerHTML = `
+        ${url ? `<iframe src="${url}" title="Offerwall" class="offerwall-iframe"></iframe>` : ""}
+        <p class="hint">Complete any offer in the wall above. Your balance is credited automatically when the provider confirms.</p>
+        <a class="btn btn-light" href="${url || "https://offers.cpx-research.com/index.php?app_id=34464"}" target="_blank" rel="noopener" style="margin-top:10px">🔗 Open CPX Offerwall in new tab</a>
+
+        <!-- Aviator crash game (demo) -->
+        <div class="aviator-section">
+          <div class="card-head"><h2>🎮 Aviator</h2><span class="chip green">Play demo</span></div>
+          <p class="muted">Try the Aviator crash game demo. This is for fun — no real money.</p>
+          <div class="aviator-frame-wrap">
+            <iframe src="https://aviator-demo.free/game" title="Aviator Demo" class="aviator-iframe" sandbox="allow-scripts allow-same-origin"></iframe>
+          </div>
+        </div>`;
       return;
     }
     // DEMO mode: simulated offer cards
