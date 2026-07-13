@@ -3,4 +3,4 @@ Allow: /
 Disallow: /admin
 Disallow: /api/
 
-Sitemap: https://pesaplug.loca.lt/sitemap.xml
+Sitemap: https://pesaplug.onrender.com/sitemap.xml
