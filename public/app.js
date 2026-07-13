@@ -461,7 +461,14 @@ async function loadOffers() {
         <p class="hint">Complete any offer in the wall above. Your balance is credited automatically when the provider confirms.</p>
         <a class="btn btn-light" href="${url || "https://offers.cpx-research.com/index.php?app_id=34464"}" target="_blank" rel="noopener" style="margin-top:10px">🔗 Open CPX Offerwall in new tab</a>
 
-        </div>`;
+        <!-- Lucky Jet crash game (demo) -->
+        <div class="aviator-section">
+          <div class="card-head"><h2>🎮 Lucky Jet</h2><span class="chip green">Demo</span></div>
+          <p class="muted">Try the Lucky Jet crash game. This is a demo for fun — no real money.</p>
+          <a class="btn btn-primary" href="https://lucky-jet.com/demo" target="_blank" rel="noopener" style="margin-top:8px">🚀 Play Lucky Jet Demo</a>
+          <p class="hint" style="margin-top:8px">Opens in a new tab.</p>
+        </div>
+      `;
       return;
     }
     // DEMO mode: simulated offer cards
