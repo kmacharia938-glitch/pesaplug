@@ -518,20 +518,11 @@ async function loadOffers() {
   } catch {}
 }
 
-// Inject a REAL Google AdSense ad unit when a publisher id is configured.
+// Create a REAL Google AdSense ad unit when a publisher id is configured.
+// The AdSense script itself is loaded statically in index.html <head>.
 function initAds() {
   const pid = RULES.ads && RULES.ads.publisherId;
   if (!pid) return; // demo mode: simulated ad reward
-  if (window.__pesaplugAds) return;
-  window.__pesaplugAds = true;
-  const s = document.createElement("script");
-  s.async = true;
-  s.crossOrigin = "anonymous";
-  s.src = "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js";
-  s.setAttribute("data-ad-client", pid); // e.g. ca-pub-XXXX
-  document.head.appendChild(s);
-
-  // Banner slot on the Offers screen
   const slot = document.getElementById("adBannerSlot");
   if (slot && !slot.dataset.loaded) {
     slot.dataset.loaded = "1";
