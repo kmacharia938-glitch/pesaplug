@@ -9,7 +9,7 @@ function num(val, fallback) {
 
 const config = {
   port: num(process.env.PORT, 3000),
-  baseUrl: (process.env.BASE_URL || "http://localhost:3000").replace(/\/$/, ""),
+  baseUrl: (process.env.BASE_URL || "https://pesaplug.onrender.com").replace(/\/$/, ""),
   jwtSecret: process.env.JWT_SECRET || "insecure-dev-secret-change-me",
 
   rewardPerVideo: num(process.env.REWARD_PER_VIDEO, 20),
