@@ -117,26 +117,19 @@ router.post("/offer/complete", auth, (req, res) => {
   res.json({ reward: offer.reward, user: publicUser(user) });
 });
 
-// GET /api/offerwall/url  -> signed live offerwall URL for the current user
+// GET /api/offerwall/url  -> signed live offerwall embed for the current user
 router.get("/offerwall/url", auth, (req, res) => {
   if (!config.offerwall.publisherId) {
     return res.status(400).json({ error: "Live offerwall not configured." });
   }
   const user = store.users.findById(req.user.id);
-  const sig = require("crypto")
-    .createHmac("sha256", config.offerwall.postbackSecret)
-    .update(String(user.id))
-    .digest("hex")
-    .slice(0, 16);
-  const postback = `${config.baseUrl}/api/offerwall/postback?user_id=${user.id}&sig=${sig}`;
 
-  let wall;
-  if (config.offerwall.provider === "bitlabs") {
-    wall = `https://wall.bitlabs.ai/?pub=${config.offerwall.publisherId}&user_id=${user.id}&postback=${encodeURIComponent(postback)}`;
-  } else {
-    // CPX Research (default)
-    wall = `https://wall.cpx-research.com/?hash=${config.offerwall.publisherId}&user_id=${user.id}&postback=${encodeURIComponent(postback)}`;
-  }
+  // Standard CPX secure hash: MD5(ext_user_id + username + email + secret_key)
+  const signInput = `${user.id}${user.name}${user.email}${config.offerwall.secretKey}`;
+  const secureHash = require("crypto").createHash("md5").update(signInput).digest("hex");
+
+  const wall = `https://offers.cpx-research.com/index.php?app_id=${config.offerwall.publisherId}&ext_user_id=${user.id}&secure_hash=${secureHash}&username=${encodeURIComponent(user.name)}&email=${encodeURIComponent(user.email)}&subid_1=&subid_2=`;
+
   res.json({ url: wall, provider: config.offerwall.provider });
 });
 

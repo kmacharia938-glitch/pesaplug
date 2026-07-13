@@ -25,9 +25,10 @@ const config = {
   },
   offerwall: {
     enabled: process.env.OFFERWALL_ENABLED !== "false",
-    // Real provider (CPX Research / BitLabs / Adscend). Leave blank = demo mode.
     provider: (process.env.OFFERWALL_PROVIDER || "cpx").toLowerCase(),
     publisherId: process.env.OFFERWALL_PUBLISHER_ID || "",
+    // Your CPX secret key from the dashboard (used to compute secure_hash)
+    secretKey: process.env.OFFERWALL_SECRET_KEY || "",
     // KSh credited to the user per real completed offer (live mode)
     reward: num(process.env.OFFERWALL_REWARD, 15),
     // Shared secret used to verify the provider's postback (OFFERWALL_POSTBACK_SECRET)
