@@ -453,11 +453,6 @@ async function loadOffers() {
         <p class="hint">Complete any offer in the wall above. Your balance is credited automatically when the provider confirms.</p>
         <a class="btn btn-light" href="${url || "https://offers.cpx-research.com/index.php?app_id=34464"}" target="_blank" rel="noopener" style="margin-top:10px">🔗 Open CPX Offerwall in new tab</a>
 
-        <!-- Aviator crash game (demo) -->
-        <div class="aviator-section">
-          <div class="card-head"><h2>🎮 Aviator</h2><span class="chip green">Play demo</span></div>
-          <p class="muted">Try the Aviator crash game demo. This is for fun — no real money.</p>
-          <a class="btn btn-primary" href="https://aviator-demo.free/game" target="_blank" rel="noopener" style="margin-top:8px">🚀 Play Aviator Demo</a>
         </div>`;
       return;
     }
@@ -470,7 +465,15 @@ async function loadOffers() {
           <div class="ot-body">
             <div class="ot-title">${esc(o.title)}</div>
             <div class="ot-desc">${esc(o.desc)}</div>
-          </div>
+        </div>
+
+        <!-- Aviator crash game (demo) -->
+        <div class="aviator-section">
+          <div class="card-head"><h2>🎮 Aviator</h2><span class="chip green">Demo</span></div>
+          <p class="muted">Try the Aviator crash game. This is a demo for fun — no real money.</p>
+          <a class="btn btn-primary" href="https://aviatorplay.org/demo" target="_blank" rel="noopener" style="margin-top:8px">🚀 Play Aviator Demo</a>
+          <p class="hint" style="margin-top:8px">Opens in a new tab. If it doesn't load, try refreshing.</p>
+        </div>
           <button class="btn btn-primary ot-btn" data-id="${o.id}">+${o.reward} KSh</button>
         </div>`
       )
