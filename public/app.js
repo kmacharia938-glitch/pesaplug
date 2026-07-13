@@ -466,14 +466,6 @@ async function loadOffers() {
             <div class="ot-title">${esc(o.title)}</div>
             <div class="ot-desc">${esc(o.desc)}</div>
         </div>
-
-        <!-- Aviator crash game (demo) -->
-        <div class="aviator-section">
-          <div class="card-head"><h2>🎮 Aviator</h2><span class="chip green">Demo</span></div>
-          <p class="muted">Try the Aviator crash game. This is a demo for fun — no real money.</p>
-          <a class="btn btn-primary" href="https://aviatorplay.org/demo" target="_blank" rel="noopener" style="margin-top:8px">🚀 Play Aviator Demo</a>
-          <p class="hint" style="margin-top:8px">Opens in a new tab. If it doesn't load, try refreshing.</p>
-        </div>
           <button class="btn btn-primary ot-btn" data-id="${o.id}">+${o.reward} KSh</button>
         </div>`
       )
