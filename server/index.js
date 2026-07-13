@@ -40,5 +40,8 @@ app.listen(config.port, () => {
   console.log(`  Local:   http://localhost:${config.port}`);
   console.log(`  Admin:   http://localhost:${config.port}/admin`);
   console.log(`  M-Pesa:  ${config.mpesa.configured ? "configured (" + config.mpesa.env + ")" : "NOT configured — fill .env"}`);
+  if (config.mpesa.configured && !config.mpesa.callbackReachable) {
+    console.log("  ⚠️  M-Pesa callbacks won't reach this server (BASE_URL is localhost). Set BASE_URL to your public URL.");
+  }
   console.log("");
 });

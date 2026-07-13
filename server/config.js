@@ -75,4 +75,8 @@ config.mpesa.configured = Boolean(
       (config.mpesa.initiatorPassword && config.mpesa.certPath))
 );
 
+// Safaricom must call BASE_URL back. If it's localhost, payouts can't complete.
+config.mpesa.callbackReachable =
+  config.mpesa.configured && !/localhost|127\.0\.0\.1/.test(config.baseUrl);
+
 module.exports = config;
