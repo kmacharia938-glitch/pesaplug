@@ -457,9 +457,7 @@ async function loadOffers() {
         <div class="aviator-section">
           <div class="card-head"><h2>🎮 Aviator</h2><span class="chip green">Play demo</span></div>
           <p class="muted">Try the Aviator crash game demo. This is for fun — no real money.</p>
-          <div class="aviator-frame-wrap">
-            <iframe src="https://aviator-demo.free/game" title="Aviator Demo" class="aviator-iframe" sandbox="allow-scripts allow-same-origin"></iframe>
-          </div>
+          <a class="btn btn-primary" href="https://aviator-demo.free/game" target="_blank" rel="noopener" style="margin-top:8px">🚀 Play Aviator Demo</a>
         </div>`;
       return;
     }
