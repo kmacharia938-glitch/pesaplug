@@ -17,7 +17,8 @@ function publicUser(u) {
     totalEarned: u.total_earned,
     videosWatched: u.videos_watched,
     streakDays: u.streak_days,
-    lastClaim: u.last_claim
+    lastClaim: u.last_claim,
+    referralCode: u.referral_code
   };
 }
 
@@ -63,8 +64,33 @@ router.post("/register", (req, res) => {
   }
 
   const passwordHash = bcrypt.hashSync(password, 10);
-  const user = store.users.create({ name, email, passwordHash });
-  res.json({ token: signToken(user), user: publicUser(user) });
+  const { user, referrer } = store.users.create({
+    name,
+    email,
+    passwordHash,
+    referralCode: (req.body.ref || "").trim()
+  });
+
+  // Apply signup bonuses (referee + referrer)
+  const signup = config.referral.signupBonus;
+  if (signup > 0) {
+    user.balance += signup;
+    user.total_earned += signup;
+    store.users.update(user);
+  }
+  // If the referrer bonus is awarded on the referee's first video, don't also
+  // award it here (avoids double-counting). Otherwise award it at signup.
+  if (
+    referrer &&
+    config.referral.referrerBonus > 0 &&
+    !config.referral.referrerOnFirstVideo
+  ) {
+    referrer.balance += config.referral.referrerBonus;
+    referrer.total_earned += config.referral.referrerBonus;
+    store.users.update(referrer);
+  }
+
+  res.json({ token: signToken(user), user: publicUser(user), referred: Boolean(referrer) });
 });
 
 // POST /api/auth/login

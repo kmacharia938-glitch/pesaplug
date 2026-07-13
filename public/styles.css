@@ -311,6 +311,27 @@ input:focus { border-color: var(--primary); }
 .toast.success { border-color: var(--primary); }
 .toast.error { border-color: var(--danger); }
 
+/* Referrals */
+.ref-row { display: flex; gap: 8px; margin-top: 6px; }
+.ref-row input { background: var(--surface-2); color: var(--text); }
+
+/* Offerwall */
+.offer-grid { display: grid; gap: 12px; margin-top: 6px; }
+.offer-tile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--surface);
+  border: 1px solid #222c3a;
+  border-radius: 12px;
+  padding: 14px;
+}
+.ot-icon { font-size: 26px; flex: 0 0 auto; }
+.ot-body { flex: 1; min-width: 0; }
+.ot-title { font-weight: 700; font-size: 15px; }
+.ot-desc { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.ot-btn { flex: 0 0 auto; padding: 9px 14px; white-space: nowrap; }
+
 /* App bar right cluster + logout */
 .appbar-right { display: flex; align-items: center; gap: 10px; }
 .logout-btn {

@@ -124,6 +124,21 @@
         <p class="muted">Watch a 30-second video fully to earn 20 KSh.</p>
         <button class="btn btn-primary btn-block" data-nav="watch">Start watching</button>
       </div>
+
+      <!-- Referrals card -->
+      <div class="card referral-card">
+        <div class="card-head">
+          <h2>Invite &amp; Earn</h2>
+          <span class="chip">+50 KSh / referral</span>
+        </div>
+        <p class="muted">Share your link. You get <strong id="rfrReferrer">50</strong> KSh when a friend joins &amp; watches, and they get <strong id="rfrSignup">20</strong> KSh on signup.</p>
+        <label>Your referral link</label>
+        <div class="ref-row">
+          <input type="text" id="referralLink" readonly />
+          <button class="btn btn-light" id="copyRefBtn">Copy</button>
+        </div>
+        <p class="hint">Referred friends: <strong id="refCount">0</strong></p>
+      </div>
     </section>
 
     <!-- WATCH VIDEOS -->
@@ -149,6 +164,19 @@
         </div>
       </div>
       <p class="hint" id="watchHint">Watch a video for 30 seconds to earn your reward. Keep it playing and stay on this screen.</p>
+
+      <!-- Owner ad slot (earns the owner; demo until a real ad SDK publisher id is set) -->
+      <button class="btn btn-block" id="watchAdBtn" style="margin-top:14px;background:var(--surface-2);color:var(--text);border:1px solid #2a3646">
+        📺 Watch a sponsored ad &amp; earn <span id="adReward">5</span> KSh
+      </button>
+    </section>
+
+    <!-- OFFERWALL -->
+    <section class="view" id="view-offers">
+      <h2 class="page-title">Offerwall</h2>
+      <p class="muted">Complete tasks to earn extra KSh. Each offer pays once.</p>
+      <div class="offer-grid" id="offerGrid"></div>
+      <p class="hint" id="offerHint">Rewards are added to your balance instantly.</p>
     </section>
 
     <!-- WITHDRAW -->
@@ -206,6 +234,9 @@
     </button>
     <button class="nav-item" data-nav="watch">
       <span class="nav-ico">▶️</span><span>Watch</span>
+    </button>
+    <button class="nav-item" data-nav="offers">
+      <span class="nav-ico">🎯</span><span>Offers</span>
     </button>
     <button class="nav-item" data-nav="withdraw">
       <span class="nav-ico">💰</span><span>Withdraw</span>

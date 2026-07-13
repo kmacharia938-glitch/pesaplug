@@ -27,13 +27,24 @@ router.get("/config", (req, res) => {
     streakReward: config.streakReward,
     videoLength: config.videoLength,
     minWithdraw: config.minWithdraw,
-    mpesaConfigured: config.mpesa.configured
+    mpesaConfigured: config.mpesa.configured,
+    referral: {
+      signupBonus: config.referral.signupBonus,
+      referrerBonus: config.referral.referrerBonus
+    },
+    offerwall: { enabled: config.offerwall.enabled, provider: config.offerwall.provider || "demo" },
+    adReward: config.ads.reward
   });
 });
 
 // Public: current video watch list (managed by admin)
 router.get("/videos", (req, res) => {
   res.json({ videos: store.videos.list() });
+});
+
+// Public: offerwall list
+router.get("/offers", (req, res) => {
+  res.json({ offers: store.offers.list().map((o) => ({ id: o.id, title: o.title, desc: o.desc, reward: o.reward, icon: o.icon })) });
 });
 
 // POST /api/video/complete  -> reward for finishing a 30s video
@@ -45,7 +56,68 @@ router.post("/video/complete", auth, (req, res) => {
   user.videos_watched += 1;
   store.users.update(user);
   store.videoLogs.create({ userId: user.id, reward });
+
+  // Credit the referrer once, when their referred user watches the first video
+  if (config.referral.referrerOnFirstVideo && user.referred_by && !user.referral_credited) {
+    const referrer = store.users.findById(user.referred_by);
+    if (referrer) {
+      referrer.balance += config.referral.referrerBonus;
+      referrer.total_earned += config.referral.referrerBonus;
+      store.users.update(referrer);
+    }
+    user.referral_credited = true;
+    store.users.update(user);
+  }
+
   res.json({ reward, user: publicUser(user) });
+});
+
+// GET /api/referrals/me  -> referral code, link and counts
+router.get("/referrals/me", auth, (req, res) => {
+  const user = store.users.findById(req.user.id);
+  const referredCount = store.admin.allUsers().filter((u) => u.referred_by === user.id).length;
+  res.json({
+    referralCode: user.referral_code,
+    referralLink: `${config.baseUrl}/?ref=${user.referral_code}`,
+    referrerBonus: config.referral.referrerBonus,
+    signupBonus: config.referral.signupBonus,
+    referredCount
+  });
+});
+
+// POST /api/offer/complete  -> demo offerwall completion awards KSh
+router.post("/offer/complete", auth, (req, res) => {
+  if (!config.offerwall.enabled) {
+    return res.status(503).json({ error: "Offerwall is disabled." });
+  }
+  const offerId = Number(req.body.offerId);
+  const offer = store.offers.findById(offerId);
+  if (!offer) return res.status(404).json({ error: "Offer not found." });
+
+  const user = store.users.findById(req.user.id);
+  if ((user.offers_completed || []).includes(offerId)) {
+    return res.status(400).json({ error: "You already completed this offer." });
+  }
+  user.offers_completed = user.offers_completed || [];
+  user.offers_completed.push(offerId);
+  user.balance += offer.reward;
+  user.total_earned += offer.reward;
+  store.users.update(user);
+
+  // Owner's simulated earnings from this offer
+  store.adLogs.record({ userId: user.id, ownerRevenue: config.offerwall.ownerRevenuePerOffer });
+
+  res.json({ reward: offer.reward, user: publicUser(user) });
+});
+
+// POST /api/ad/complete  -> rewarded ad: user gets a cut, owner logs revenue
+router.post("/ad/complete", auth, (req, res) => {
+  const user = store.users.findById(req.user.id);
+  user.balance += config.ads.reward;
+  user.total_earned += config.ads.reward;
+  store.users.update(user);
+  store.adLogs.record({ userId: user.id, ownerRevenue: config.ads.ownerRevenuePerView });
+  res.json({ reward: config.ads.reward, user: publicUser(user) });
 });
 
 // POST /api/streak/claim  -> once per day, +streakReward

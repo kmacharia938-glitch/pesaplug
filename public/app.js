@@ -73,7 +73,10 @@ $("authForm").addEventListener("submit", async (e) => {
 
   try {
     const path = authMode === "login" ? "/api/auth/login" : "/api/auth/register";
-    const body = authMode === "login" ? { email, password } : { name, email, password };
+    const body =
+      authMode === "login"
+        ? { email, password }
+        : { name, email, password, ref: new URLSearchParams(location.search).get("ref") || "" };
     const data = await api(path, { method: "POST", body, authed: false });
     setToken(data.token);
     me = data.user;
@@ -100,6 +103,8 @@ async function enterApp() {
   $("userName").textContent = me.name;
   RULES = await api("/api/config", { authed: false });
   await loadVideos();
+  await loadReferrals();
+  await loadOffers();
   applyRulesToUI();
   render();
   await loadHistory();
@@ -118,9 +123,11 @@ async function loadVideos() {
 }
 
 function applyRulesToUI() {
-  $("videoReward") && ($("videoReward").textContent = RULES.rewardPerVideo);
   document.querySelectorAll("[data-video-reward]").forEach((el) => (el.textContent = RULES.rewardPerVideo));
   $("videoTimer").textContent = fmtTime(RULES.videoLength);
+  if ($("adReward")) $("adReward").textContent = RULES.adReward || 5;
+  if ($("rfrReferrer")) $("rfrReferrer").textContent = RULES.referral ? RULES.referral.referrerBonus : 50;
+  if ($("rfrSignup")) $("rfrSignup").textContent = RULES.referral ? RULES.referral.signupBonus : 20;
   const infoBanner = $("infoBanner");
   if (!RULES.mpesaConfigured) {
     infoBanner.innerHTML = `Signed in as <strong>${me.name}</strong>. Note: M-Pesa payouts not yet configured on the server.`;
@@ -404,6 +411,84 @@ $("withdrawForm").addEventListener("submit", async (e) => {
     $("withdrawSubmit").textContent = "Request withdrawal";
   }
 });
+
+/* ============================================================
+   REFERRALS / OFFERWALL / ADS  (monetization)
+   ============================================================ */
+async function loadReferrals() {
+  try {
+    const r = await api("/api/referrals/me");
+    $("referralLink").value = r.referralLink;
+    $("refCount").textContent = r.referredCount;
+  } catch {}
+}
+
+$("copyRefBtn").addEventListener("click", () => {
+  const inp = $("referralLink");
+  inp.select();
+  try {
+    navigator.clipboard.writeText(inp.value);
+    toast("Referral link copied! 🔗");
+  } catch {
+    document.execCommand("copy");
+    toast("Referral link copied! 🔗");
+  }
+});
+
+async function loadOffers() {
+  try {
+    const { offers } = await api("/api/offers", { authed: false });
+    const grid = $("offerGrid");
+    grid.innerHTML = offers
+      .map(
+        (o) => `<div class="offer-tile" data-id="${o.id}">
+          <div class="ot-icon">${o.icon || "🎯"}</div>
+          <div class="ot-body">
+            <div class="ot-title">${esc(o.title)}</div>
+            <div class="ot-desc">${esc(o.desc)}</div>
+          </div>
+          <button class="btn btn-primary ot-btn" data-id="${o.id}">+${o.reward} KSh</button>
+        </div>`
+      )
+      .join("");
+    grid.querySelectorAll(".ot-btn").forEach((btn) =>
+      btn.addEventListener("click", async () => {
+        btn.disabled = true;
+        btn.textContent = "…";
+        try {
+          const data = await api("/api/offer/complete", { method: "POST", body: { offerId: Number(btn.dataset.id) } });
+          me = data.user;
+          render();
+          toast(`+${data.reward} KSh from offer! 🎯`);
+          btn.textContent = "Done ✓";
+        } catch (err) {
+          toast(err.message, "error");
+          btn.disabled = false;
+          btn.textContent = "Retry";
+        }
+      })
+    );
+  } catch {}
+}
+
+$("watchAdBtn").addEventListener("click", async () => {
+  const btn = $("watchAdBtn");
+  btn.disabled = true;
+  try {
+    const data = await api("/api/ad/complete", { method: "POST" });
+    me = data.user;
+    render();
+    toast(`+${data.reward} KSh from ad! 📺`);
+  } catch (err) {
+    toast(err.message, "error");
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+function esc(s) {
+  return String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+}
 
 /* ============================================================
    INIT

@@ -51,7 +51,16 @@ router.post("/login", (req, res) => {
 
 // GET /api/admin/stats
 router.get("/stats", adminAuth, (req, res) => {
-  res.json({ stats: store.admin.stats(), mpesaConfigured: config.mpesa.configured });
+  const s = store.admin.stats();
+  res.json({
+    stats: {
+      ...s,
+      ownerRevenue: s.ownerAdRevenue, // simulated until real ad/offerwall provider connected
+      mpesaConfigured: config.mpesa.configured,
+      offerwallProvider: config.offerwall.provider || "demo",
+      adsPublisherId: config.ads.publisherId ? "set" : "demo"
+    }
+  });
 });
 
 // GET /api/admin/users

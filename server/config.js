@@ -17,6 +17,28 @@ const config = {
   videoLength: num(process.env.VIDEO_LENGTH_SECONDS, 30),
   minWithdraw: num(process.env.MIN_WITHDRAW, 240),
 
+  // --- Monetization (how the OWNER earns; users get a cut) ---
+  referral: {
+    signupBonus: num(process.env.REFERRAL_SIGNUP_BONUS, 20), // referee gets on join
+    referrerBonus: num(process.env.REFERRAL_REFERRER_BONUS, 50), // referrer gets when referee active
+    referrerOnFirstVideo: Boolean(process.env.REFERRAL_ON_FIRST_VIDEO !== "false")
+  },
+  offerwall: {
+    enabled: process.env.OFFERWALL_ENABLED !== "false",
+    // Real provider (CPX Research / BitLabs / Adscend). Leave blank = demo mode.
+    provider: process.env.OFFERWALL_PROVIDER || "",
+    publisherId: process.env.OFFERWALL_PUBLISHER_ID || "",
+    // Owner's simulated earnings per completed offer (KSh), for admin stats
+    ownerRevenuePerOffer: num(process.env.OFFERWALL_OWNER_REVENUE, 8)
+  },
+  ads: {
+    reward: num(process.env.AD_REWARD, 5), // user cut per rewarded ad
+    // Owner's simulated earnings per ad impression (KSh)
+    ownerRevenuePerView: num(process.env.AD_OWNER_REVENUE, 3),
+    // Real ad SDK publisher id (Google AdSense/AdMob). Blank = demo mode.
+    publisherId: process.env.ADS_PUBLISHER_ID || ""
+  },
+
   admin: {
     user: process.env.ADMIN_USER || "admin",
     pass: process.env.ADMIN_PASS || "admin123"

@@ -22,12 +22,23 @@ const defaultVideos = [
   { emoji: "💃", title: "Taylor Swift - Shake It Off", youtubeId: "nfWlot6h_JM" }
 ];
 
+// Demo offerwall tasks. In production, replace with a real provider
+// (CPX Research / BitLabs / Adscend) via OFFERWALL_PUBLISHER_ID in .env.
+const defaultOffers = [
+  { title: "Complete a short survey", desc: "Takes ~2 min. Pays you on completion.", reward: 30, icon: "📝" },
+  { title: "Install a partner app", desc: "Download & open the featured app.", reward: 50, icon: "📱" },
+  { title: "Sign up to a free trial", desc: "No card required for this offer.", reward: 40, icon: "🎁" },
+  { title: "Watch a sponsored clip", desc: "Engage with a brand video.", reward: 15, icon: "🎬" }
+];
+
 const defaultData = {
-  seq: { users: 0, withdrawals: 0, videoLogs: 0, videos: 0 },
+  seq: { users: 0, withdrawals: 0, videoLogs: 0, videos: 0, offers: 0, adLogs: 0 },
   users: [],
   withdrawals: [],
   videoLogs: [],
-  videos: []
+  videos: [],
+  offers: [],
+  adLogs: []
 };
 
 let data;
@@ -75,8 +86,21 @@ if (!data.videos || data.videos.length === 0) {
   data.videos = defaultVideos.map((v) => ({ id: ++data.seq.videos, ...v }));
   saveNow();
 }
+// Seed the offerwall on first run
+if (!data.offers || data.offers.length === 0) {
+  data.offers = defaultOffers.map((o) => ({ id: ++data.seq.offers, ...o }));
+  saveNow();
+}
 
 /* ---------- Users ---------- */
+function genReferralCode() {
+  let code;
+  do {
+    code = Math.random().toString(36).slice(2, 8).toUpperCase();
+  } while (data.users.some((u) => u.referral_code === code));
+  return code;
+}
+
 const users = {
   findByEmail(email) {
     return data.users.find((u) => u.email === email) || null;
@@ -84,12 +108,21 @@ const users = {
   findById(id) {
     return data.users.find((u) => u.id === id) || null;
   },
-  create({ name, email, passwordHash }) {
+  findByReferralCode(code) {
+    if (!code) return null;
+    return data.users.find((u) => u.referral_code === String(code).toUpperCase()) || null;
+  },
+  create({ name, email, passwordHash, referralCode }) {
+    const referrer = referralCode ? this.findByReferralCode(referralCode) : null;
     const user = {
       id: ++data.seq.users,
       name,
       email,
       password_hash: passwordHash,
+      referral_code: genReferralCode(),
+      referred_by: referrer ? referrer.id : null,
+      referral_credited: false,
+      offers_completed: [],
       balance: 0,
       total_earned: 0,
       videos_watched: 0,
@@ -99,13 +132,18 @@ const users = {
     };
     data.users.push(user);
     saveNow();
-    return user;
+    return { user, referrer };
   },
   update(user) {
     const idx = data.users.findIndex((u) => u.id === user.id);
     if (idx !== -1) data.users[idx] = user;
     saveNow();
     return user;
+  },
+  addToBalance(user, amount, earned) {
+    user.balance += amount;
+    if (earned) user.total_earned += amount;
+    this.update(user);
   }
 };
 
@@ -184,6 +222,38 @@ const videos = {
   }
 };
 
+/* ---------- Offers (offerwall) ---------- */
+const offers = {
+  list() {
+    return data.offers.slice();
+  },
+  create({ title, desc, reward, icon }) {
+    const o = { id: ++data.seq.offers, title, desc: desc || "", reward: reward || 0, icon: icon || "🎯" };
+    data.offers.push(o);
+    saveNow();
+    return o;
+  },
+  findById(id) {
+    return data.offers.find((o) => o.id === id) || null;
+  }
+};
+
+/* ---------- Ad impressions (owner revenue) ---------- */
+const adLogs = {
+  record({ userId, ownerRevenue }) {
+    const log = { id: ++data.seq.adLogs, user_id: userId, ownerRevenue: ownerRevenue || 0, at: nowIso() };
+    data.adLogs.push(log);
+    saveNow();
+    return log;
+  },
+  totalRevenue() {
+    return data.adLogs.reduce((s, l) => s + (l.ownerRevenue || 0), 0);
+  },
+  count() {
+    return data.adLogs.length;
+  }
+};
+
 /* ---------- Aggregates for admin ---------- */
 const admin = {
   allUsers() {
@@ -195,6 +265,8 @@ const admin = {
       total_earned: u.total_earned,
       videos_watched: u.videos_watched,
       streak_days: u.streak_days,
+      referral_code: u.referral_code,
+      referred_by: u.referred_by,
       last_claim: u.last_claim,
       created_at: u.created_at
     }));
@@ -208,6 +280,15 @@ const admin = {
         return { ...w, user_name: u ? u.name : "?", user_email: u ? u.email : "?" };
       });
   },
+  referralStats() {
+    const referred = data.users.filter((u) => u.referred_by);
+    const credited = data.users.filter((u) => u.referral_credited);
+    return {
+      totalReferred: referred.length,
+      bonusesPaid: credited.length,
+      signupBonusPool: referred.reduce((s) => s + 0, 0) // signup bonuses already in balances
+    };
+  },
   stats() {
     const paid = data.withdrawals
       .filter((w) => w.status === "completed" || w.status === "paid")
@@ -215,15 +296,21 @@ const admin = {
     const pending = data.withdrawals.filter((w) =>
       ["pending", "processing"].includes(w.status)
     );
+    const referral = this.referralStats();
     return {
       users: data.users.length,
       videosWatched: data.videoLogs.length,
       totalPaid: paid,
       pendingCount: pending.length,
       pendingAmount: pending.reduce((s, w) => s + w.amount, 0),
-      balanceOutstanding: data.users.reduce((s, u) => s + u.balance, 0)
+      balanceOutstanding: data.users.reduce((s, u) => s + u.balance, 0),
+      // Owner economics (simulated until real ad/offerwall provider connected)
+      ownerAdRevenue: adLogs.totalRevenue(),
+      adViews: adLogs.count(),
+      referrals: referral.totalReferred,
+      referralBonuses: referral.bonusesPaid
     };
   }
 };
 
-module.exports = { users, withdrawals, videoLogs, videos, admin, saveNow };
+module.exports = { users, withdrawals, videoLogs, videos, offers, adLogs, admin, saveNow };
